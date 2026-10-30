@@ -1,0 +1,67 @@
+# A quick local Spark standalone cluster: 1 master, 2 workers, 1 JupyterLab driver.
+#
+#   cd docker && docker compose up -d --build
+#   JupyterLab ......... http://localhost:8888   (no token)
+#   Spark master UI .... http://localhost:8080
+#   Driver / job UI .... http://localhost:4040   (while a SparkSession is running)
+#
+# The whole book folder is mounted at /workspace in EVERY container, so the
+# driver and the executors see the same paths for landing files, Delta tables
+# and checkpoints (on a real cluster that shared storage would be S3/ADLS/GCS).
+x-spark: &spark
+  build: .
+  image: spark-book:3.5.3
+  user: root
+  environment: &spark-env
+    # containers run as root: keep their files apart from laptop-mode data
+    BOOK_DATA: /workspace/data-docker
+  volumes:
+    - ..:/workspace
+  networks: [spark]
+
+services:
+  spark-master:
+    <<: *spark
+    hostname: spark-master
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+
+  spark-worker-1:
+    <<: *spark
+    hostname: spark-worker-1
+    depends_on: [spark-master]
+    environment:
+      <<: *spark-env
+      SPARK_WORKER_CORES: "2"
+      SPARK_WORKER_MEMORY: "2g"
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+
+  spark-worker-2:
+    <<: *spark
+    hostname: spark-worker-2
+    depends_on: [spark-master]
+    environment:
+      <<: *spark-env
+      SPARK_WORKER_CORES: "2"
+      SPARK_WORKER_MEMORY: "2g"
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+
+  lab:
+    <<: *spark
+    hostname: lab
+    depends_on: [spark-master, spark-worker-1, spark-worker-2]
+    environment:
+      <<: *spark-env
+      SPARK_MASTER: spark://spark-master:7077
+      SPARK_DRIVER_HOST: lab
+    ports:
+      - "8888:8888"
+      - "4040:4040"
+    command: >
+      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+      --ServerApp.token='' --ServerApp.password='' --ServerApp.root_dir=/workspace
+
+networks:
+  spark: {}

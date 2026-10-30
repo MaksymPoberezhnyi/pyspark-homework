@@ -1,0 +1,25 @@
+[book]
+title = "Hands-on Spark: Auto Loader, CDC & Slowly Changing Dimensions"
+authors = ["Spark Training"]
+language = "en"
+multilingual = false
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+additional-css = ["theme/quiz.css"]
+additional-js = ["theme/quiz.js"]
+git-repository-url = ""
+no-section-label = false
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.search]
+enable = true

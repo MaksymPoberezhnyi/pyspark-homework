@@ -1,0 +1,8 @@
+book/
+data/
+data-docker/
+__pycache__/
+.ipynb_checkpoints/
+spark-warehouse/
+metastore_db/
+derby.log

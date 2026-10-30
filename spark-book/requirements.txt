@@ -1,0 +1,6 @@
+# Spark 3.5.x pairs with Delta Lake 3.2.x — keep these two versions in lock-step.
+pyspark==3.5.3
+delta-spark==3.2.1
+jupyterlab>=4.0
+jupytext>=1.16
+requests>=2.31
